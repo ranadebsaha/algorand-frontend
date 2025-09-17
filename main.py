@@ -63,11 +63,14 @@ app = FastAPI(
 )
 
 app.add_middleware(
-  CORSMiddleware,
-  allow_origins=["http://localhost:5173"],  # React dev server URL; add others for production
-  allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://your-frontend.vercel.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ------------------- Pydantic Models -------------------

@@ -5,3 +5,4 @@ algosdk
 pydantic
 reportlab
 qrcode
+python-multipart

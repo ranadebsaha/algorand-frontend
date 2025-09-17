@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.47.0",
     "@clerk/react-router": "^1.10.0",
+    "@google/generative-ai": "^0.24.1",
     "@perawallet/connect": "^1.4.2",
     "@supabase/supabase-js": "^2.57.4",
     "@types/node": "^24.5.0",

@@ -1,4 +1,4 @@
-# Biswaschain
+# BishwasChain
 
 📜 *Blockchain-Backed Certificate Verification Platform*
 

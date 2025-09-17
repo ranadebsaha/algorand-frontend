@@ -40,6 +40,7 @@ const OrganizerDashboard: React.FC = () => {
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verified' | 'failed'>('idle');
   const [verificationMessage, setVerificationMessage] = useState<string>('');
   const [isMinting, setIsMinting] = useState<boolean>(false);
+  const [skipVerification, setSkipVerification] = useState<boolean>(false);
 
   // Initialize Gemini AI with environment variable for Vite
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
@@ -62,20 +63,35 @@ const OrganizerDashboard: React.FC = () => {
 
   // Verify certificate with Gemini AI
   const verifyCertificate = async (file: File): Promise<VerificationResult> => {
+    // Skip verification for testing
+    if (skipVerification) {
+      console.log("Skipping verification (test mode)");
+      return {
+        isValid: true,
+        message: "✅ Verification skipped (test mode)"
+      };
+    }
+
     try {
       setIsVerifying(true);
       console.log("Starting certificate verification...");
 
-      // Validate API key
-      if (!import.meta.env.VITE_GEMINI_API_KEY) {
+      // Check if API key exists
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      console.log("API Key present:", !!apiKey);
+      
+      if (!apiKey) {
+        console.error("No API key found");
         throw new Error('Gemini API key not found. Please add VITE_GEMINI_API_KEY to your .env file');
       }
 
       // Convert file to base64
       const base64Data = await fileToBase64(file);
+      console.log("File converted to base64, length:", base64Data.length);
       
       // Get the generative model
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      console.log("Model initialized");
 
       // Create the prompt for certificate verification
       const prompt = `
@@ -93,16 +109,17 @@ const OrganizerDashboard: React.FC = () => {
         
         Respond with a JSON object in this exact format:
         {
-          "isValid": true/false,
-          "confidence": 0-100,
-          "type": "certificate_type" (e.g., "completion certificate", "achievement certificate", "participation certificate", "academic certificate"),
-          "reasoning": "detailed explanation of why this is or isn't a certificate",
-          "suggestions": "if not valid, suggest what might be missing"
+          "isValid": true,
+          "confidence": 85,
+          "type": "completion certificate",
+          "reasoning": "This document contains all the necessary elements of a legitimate certificate"
         }
         
         Be strict in your evaluation. Only return isValid: true if this is clearly a legitimate certificate document.
       `;
 
+      console.log("Sending request to Gemini...");
+      
       // Generate content with the image
       const result = await model.generateContent([
         prompt,
@@ -117,32 +134,40 @@ const OrganizerDashboard: React.FC = () => {
       const response = await result.response;
       const text = response.text();
       
-      console.log("Gemini raw response:", text);
+      console.log("Gemini response received:", text);
 
       // Try to parse JSON response
       try {
         // Extract JSON from the response (sometimes Gemini adds markdown formatting)
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
+          console.log("No JSON found, using fallback");
           throw new Error("No JSON found in response");
         }
         
         const analysis: GeminiAnalysis = JSON.parse(jsonMatch[0]);
+        console.log("Parsed analysis:", analysis);
+        
+        const isValid = analysis.isValid && analysis.confidence > 70;
+        console.log("Final validation result:", isValid);
         
         return {
-          isValid: analysis.isValid && analysis.confidence > 70, // Require high confidence
-          message: analysis.isValid 
+          isValid,
+          message: isValid 
             ? `✅ Valid ${analysis.type} detected (${analysis.confidence}% confidence): ${analysis.reasoning}`
-            : `❌ Not a valid certificate (${analysis.confidence}% confidence): ${analysis.reasoning}. ${analysis.suggestions || ''}`
+            : `❌ Not a valid certificate (${analysis.confidence}% confidence): ${analysis.reasoning}`
         };
         
       } catch (parseError) {
         console.error("Error parsing Gemini response:", parseError);
+        console.log("Using fallback text analysis");
         
         // Fallback: simple text analysis
         const lowerText = text.toLowerCase();
         const certificateKeywords = ['certificate', 'certification', 'diploma', 'award', 'completion', 'achievement', 'qualified', 'accredited'];
         const hasKeywords = certificateKeywords.some(keyword => lowerText.includes(keyword));
+        
+        console.log("Fallback analysis result:", hasKeywords);
         
         return {
           isValid: hasKeywords,
@@ -155,12 +180,14 @@ const OrganizerDashboard: React.FC = () => {
     } catch (error: unknown) {
       console.error("Certificate verification error:", error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
       return {
         isValid: false,
         message: `❌ Verification failed: ${errorMessage}. Please try again.`
       };
     } finally {
       setIsVerifying(false);
+      console.log("Verification process completed");
     }
   };
 
@@ -168,15 +195,25 @@ const OrganizerDashboard: React.FC = () => {
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
     
+    console.log("handleChange called:", { name, files: files?.length });
+    
     if (files && files[0]) {
       const file = files[0];
+      
+      console.log("File selected:", {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
       
       // Reset verification status
       setVerificationStatus('idle');
       setVerificationMessage('');
+      console.log("Verification status reset to idle");
       
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
+        console.log("File too large");
         setVerificationStatus('failed');
         setVerificationMessage('❌ File size too large. Please upload a file smaller than 10MB.');
         return;
@@ -184,42 +221,52 @@ const OrganizerDashboard: React.FC = () => {
       
       // Set file and preview
       setFormData((prev) => ({ ...prev, [name]: file }));
+      console.log("Form data updated with file");
       
       // Only create preview for PDFs
       if (file.type === 'application/pdf') {
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
-        
-        // Clean up previous URL to prevent memory leaks
-        return () => URL.revokeObjectURL(url);
+        console.log("Preview URL created for PDF");
       } else {
         setPreviewUrl(null);
+        console.log("No preview for non-PDF file");
       }
 
-      // Verify the certificate with Gemini
+      // Check if file type is supported
       if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
-        const verification = await verifyCertificate(file);
+        console.log("File type supported, starting verification...");
         
-        setVerificationStatus(verification.isValid ? 'verified' : 'failed');
-        setVerificationMessage(verification.message);
-        
-        if (!verification.isValid) {
-          // Clear the file if verification fails
-          setFormData((prev) => ({ ...prev, [name]: null }));
-          setPreviewUrl(null);
+        try {
+          const verification = await verifyCertificate(file);
+          console.log("Verification result:", verification);
           
-          // Reset file input
-          if (e.target) {
-            e.target.value = '';
+          setVerificationStatus(verification.isValid ? 'verified' : 'failed');
+          setVerificationMessage(verification.message);
+          
+          if (!verification.isValid) {
+            console.log("Verification failed, clearing file");
+            setFormData((prev) => ({ ...prev, [name]: null }));
+            setPreviewUrl(null);
+            
+            if (e.target) {
+              e.target.value = '';
+            }
+          } else {
+            console.log("Verification successful!");
           }
+        } catch (error) {
+          console.error("Error during verification:", error);
+          setVerificationStatus('failed');
+          setVerificationMessage('❌ Error during verification. Please try again.');
         }
       } else {
+        console.log("Unsupported file type");
         setVerificationStatus('failed');
         setVerificationMessage('❌ Please upload a PDF or image file (JPEG, PNG) of the certificate.');
         setFormData((prev) => ({ ...prev, [name]: null }));
         setPreviewUrl(null);
         
-        // Reset file input
         if (e.target) {
           e.target.value = '';
         }
@@ -230,8 +277,25 @@ const OrganizerDashboard: React.FC = () => {
     }
   };
 
+  // Manual verification override for testing
+  // const handleManualVerify = () => {
+  //   if (formData.certificate) {
+  //     console.log("Manual verification triggered");
+  //     setVerificationStatus('verified');
+  //     setVerificationMessage('✅ Manually verified for testing');
+  //   }
+  // };
+
   // Handle Mint NFT
   const handleMintNFT = async (): Promise<void> => {
+    console.log("Mint button clicked");
+    console.log("Current state:", {
+      certificate: !!formData.certificate,
+      verificationStatus,
+      isMinting,
+      isVerifying
+    });
+
     if (!formData.certificate) {
       alert("Please upload a certificate file first.");
       return;
@@ -265,6 +329,7 @@ const OrganizerDashboard: React.FC = () => {
     }
 
     setIsMinting(true);
+    console.log("Starting minting process...");
 
     const formDataToSend = new FormData();
     formDataToSend.append("event", formData.eventName);
@@ -275,19 +340,23 @@ const OrganizerDashboard: React.FC = () => {
     formDataToSend.append("certificate_file", formData.certificate);
 
     try {
+      console.log("Sending request to backend...");
       const response = await fetch("http://localhost:8000/mint", {
         method: "POST",
         body: formDataToSend,
       });
+
+      console.log("Response status:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
+      console.log("Mint result:", result);
+
       if (result.success) {
         alert(`✅ Certificate NFT Minted Successfully!\n\nAsset ID: ${result.asset_id}\nTransaction ID: ${result.transaction_id || 'N/A'}\n\n${result.email_sent ? '📧 Email notification sent to recipient' : '⚠️ Email notification failed'}`);
-        console.log("Mint response:", result);
         
         // Reset form after successful minting
         setFormData({
@@ -317,8 +386,23 @@ const OrganizerDashboard: React.FC = () => {
       alert(`❌ Minting failed: ${errorMessage}`);
     } finally {
       setIsMinting(false);
+      console.log("Minting process completed");
     }
   };
+
+  // Check if button should be enabled
+  const isButtonEnabled = formData.certificate && 
+                         verificationStatus === 'verified' && 
+                         !isMinting && 
+                         !isVerifying;
+
+  console.log("Button enabled check:", {
+    certificate: !!formData.certificate,
+    verificationStatus,
+    isMinting,
+    isVerifying,
+    isButtonEnabled
+  });
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -422,6 +506,41 @@ const OrganizerDashboard: React.FC = () => {
                 Supported formats: PDF, JPEG, PNG (Max size: 10MB)
               </p>
 
+              {/* Development Mode Options */}
+              {/* {import.meta.env.DEV && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 bg-yellow-900/20 rounded border border-yellow-700/30">
+                    <input
+                      type="checkbox"
+                      id="skipVerification"
+                      checked={skipVerification}
+                      onChange={(e) => setSkipVerification(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label htmlFor="skipVerification" className="text-yellow-300 text-xs">
+                      Skip AI verification (dev mode)
+                    </label>
+                  </div> */}
+
+                  {/* {formData.certificate && verificationStatus !== 'verified' && (
+                    <button
+                      onClick={handleManualVerify}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                    >
+                      Manual Verify (Test)
+                    </button>
+                  )} */}
+
+                  {/* <div className="p-2 bg-gray-800 rounded text-xs text-gray-300">
+                    <div>Certificate: {formData.certificate ? '✅' : '❌'}</div>
+                    <div>Verification: {verificationStatus}</div>
+                    <div>Is Minting: {isMinting ? '✅' : '❌'}</div>
+                    <div>Is Verifying: {isVerifying ? '✅' : '❌'}</div>
+                    <div>Button Enabled: {isButtonEnabled ? '✅' : '❌'}</div>
+                  </div> */}
+                {/* </div>
+              )} */}
+
               {/* Verification Status */}
               {isVerifying && (
                 <motion.div
@@ -467,14 +586,14 @@ const OrganizerDashboard: React.FC = () => {
 
             <motion.button
               onClick={handleMintNFT}
-              disabled={!formData.certificate || verificationStatus !== 'verified' || isMinting || isVerifying}
+              disabled={!isButtonEnabled}
               className={`flex items-center justify-center gap-2 px-8 py-3 w-full rounded-lg transition-all shadow-lg ${
-                formData.certificate && verificationStatus === 'verified' && !isMinting && !isVerifying
+                isButtonEnabled
                   ? 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-400 hover:to-teal-400 text-white shadow-green-500/25 cursor-pointer'
                   : 'bg-gray-600 text-gray-300 cursor-not-allowed shadow-gray-600/25'
               }`}
-              whileHover={formData.certificate && verificationStatus === 'verified' && !isMinting ? { scale: 1.02 } : {}}
-              whileTap={formData.certificate && verificationStatus === 'verified' && !isMinting ? { scale: 0.98 } : {}}
+              whileHover={isButtonEnabled ? { scale: 1.02 } : {}}
+              whileTap={isButtonEnabled ? { scale: 0.98 } : {}}
             >
               {isMinting ? (
                 <>
@@ -489,9 +608,13 @@ const OrganizerDashboard: React.FC = () => {
               )}
             </motion.button>
             
-            {verificationStatus !== 'verified' && (
+            {!isButtonEnabled && (
               <p className="text-gray-400 text-xs text-center">
-                Please upload and verify a valid certificate before minting
+                {!formData.certificate 
+                  ? "Please upload a certificate file" 
+                  : verificationStatus !== 'verified' 
+                    ? "Please wait for certificate verification" 
+                    : "Please fill all required fields"}
               </p>
             )}
           </div>

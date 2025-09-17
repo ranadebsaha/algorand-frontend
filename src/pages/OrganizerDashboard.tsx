@@ -36,6 +36,7 @@ const OrganizerDashboard: React.FC = () => {
     }
   };
 
+  
   const handleInputChange = (field: string, value: string | File) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -56,6 +57,34 @@ const OrganizerDashboard: React.FC = () => {
         return formData.certificate;
       default:
         return false;
+    }
+  };
+  const handleMint = async () => {
+  if (!formData.certificate) return;
+
+  const data = new FormData();
+  data.append("event", formData.eventName);
+  data.append("organizer", formData.organizerName);
+  data.append("date", formData.eventDate);
+  data.append("recipient_name", "Attendee"); // you can add input for recipient name
+  data.append("recipient_email", "attendee@email.com"); // add email field if needed
+  data.append("certificate_file", formData.certificate);
+
+  try {
+    const res = await fetch("http://localhost:8000/mint/", {
+      method: "POST",
+      body: data,
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      alert(`✅ NFT Minted! Asset ID: ${result.asset_id}`);
+    } else {
+        alert(`❌ Error: ${result.detail || "Failed to mint NFT"}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Network error while minting NFT");
     }
   };
 
@@ -268,13 +297,14 @@ const OrganizerDashboard: React.FC = () => {
               </motion.button>
               
               <motion.button
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-400 hover:to-teal-400 transition-all shadow-lg shadow-green-500/25"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Coins className="w-5 h-5" />
-                Mint NFT
-              </motion.button>
+  onClick={handleMint}
+  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-400 hover:to-teal-400 transition-all shadow-lg shadow-green-500/25"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <Coins className="w-5 h-5" />
+  Mint NFT
+</motion.button>
             </div>
           </motion.div>
         )}

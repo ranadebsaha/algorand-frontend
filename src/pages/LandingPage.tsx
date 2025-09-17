@@ -70,17 +70,17 @@ const LandingPage: React.FC = () => {
           </GlowingButton>
         </Link>
         
-        <Link to="/attendee">
+         <Link to="/attendee">
           <GlowingButton icon={User} gradient="from-cyan-500 to-blue-500">
             Attendee
           </GlowingButton>
         </Link>
         
-        <Link to="/verify">
+        {/* <Link to="/verify">
           <GlowingButton icon={Shield} gradient="from-green-500 to-teal-500">
             Verifier
           </GlowingButton>
-        </Link>
+        </Link> */}
       </motion.div>
 
       {/* Floating 3D Elements */}

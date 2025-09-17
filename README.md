@@ -1,138 +1,86 @@
-# Algorand POAP Attendance Verification System
+# BishwasChain
 
-A futuristic, blockchain-verified attendance proof system built on Algorand with a stunning neon-themed UI.
+📜 *Blockchain-Backed Certificate Verification Platform*
 
-## 🚀 Features
+Biswaschain is a web-based platform that leverages the *Algorand blockchain* to issue and verify digital certificates.  
+It solves the pervasive problem of fake credentials by providing a secure, tamper-proof, and universally verifiable system for academic and professional certificates.
 
-- **Event Organizers**: Create and mint attendance NFTs for events
-- **Attendees**: Collect and showcase POAP NFTs in a gamified dashboard
-- **Verifiers**: Validate certificate authenticity with blockchain verification
-- **Blockchain Integration**: Built on Algorand for secure, decentralized verification
+---
 
-## 🎨 Design
+## 🔹 The Problem
+The current system for managing certificates is *vulnerable and inefficient*:
 
-- **Glassmorphism UI** with backdrop blur effects
-- **Neon gradients** and glowing animations
-- **Framer Motion** for smooth transitions
-- **Responsive design** optimized for mobile and desktop
-- **Gamification elements** with collector badges
+- *Easy Forgery:* Anyone can create fake certificates using simple digital tools like Photoshop.  
+- *Verification Challenges:* Recruiters and institutions struggle to verify the authenticity of credentials, leading to wasted time and resources.
+- *Fake certificates are easy to create and hard to detect
+- *Lack of Trust:* Traditional digital certificates (e.g., PDFs) can be copied or tampered with, creating a significant trust gap in professional and academic achievements.  
 
-## 🛠️ Tech Stack
+---
 
-- **Frontend**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Routing**: React Router DOM
-- **Database**: Supabase (ready for integration)
+## 🔹 The Solution
+Biswaschain leverages *blockchain technology* to create a trusted and transparent verification system.  
+Each certificate is minted as a unique *Algorand Standard Asset (ASA), securing it on an **immutable public ledger*.
 
-## 📱 Pages
+### How It Works
+1. *Organizers* (colleges, companies, hackathon hosts) upload event details and attendee lists to the Biswaschain platform.
+2. **AI fraud detection** ensures only valid certificates are minted. 
+3. The system automatically generates a *PDF certificate* for each attendee and mints a corresponding *ASA* on the Algorand blockchain.
+4. Each attendee receives an email containing:
+   - A link to their *PDF certificate*  
+   - The *NFT details* (Asset ID and Transaction ID)  
+   - A *QR code* for easy verification
+5. When scanned, the QR code redirects to an *Algorand blockchain explorer* where the on-chain record of the certificate can be instantly viewed, verifying its authenticity.
 
-### 🏠 Landing Page
-- Dark neon gradient background
-- Hero text: "Own Your Attendance. Verified on Algorand"
-- Three main navigation buttons with glow effects
+---
 
-### 🧑‍💻 Organizer Dashboard
-- Step-by-step event creation wizard
-- Certificate upload with drag & drop
-- NFT preview with glassmorphic design
-- Mint button with confirmation flow
+## 🔹 Key Features
+- *Tamper-Proof Certificates:* Every certificate is an immutable record on the blockchain.
+- **AI template validation** to stop fake uploads. 
+- *Streamlined Issuance:* Organizers can issue a large number of certificates with a single upload.  
+- *Effortless Verification:* Certificates can be verified instantly by scanning a QR code or entering the unique Asset ID.  
+- *Email Automation:* The platform automatically sends certificates and verification details directly to attendees.  
+- *Scalability:* Designed to handle everything from small workshops to large universities.  
 
-### 🎟️ Attendee Dashboard
-- Wallet connection interface
-- NFT collection carousel
-- Gamification badges and progress tracking
-- Holographic ticket designs
+---
 
-### ✅ Verifier Page
-- Certificate upload zone
-- Real-time verification with animations
-- Detailed verification results
-- Confidence scoring system
+## 🔹 Impact
+- *Restores Trust:* Eliminates the possibility of forged certificates, making credentials truly reliable.  
+- *Saves Time:* Automates the verification process for recruiters, HR departments, and institutions.  
+- *Empowers Individuals:* Gives students and professionals verifiable achievements they can showcase globally.  
+- *Practical Blockchain Use:* Demonstrates a real-world, impactful application of blockchain technology.
+
+---
+
+## 🔹 Tech Stack
+
+| Category       | Technology             | Description |
+|-----------------|------------------------|------------|
+| *Frontend*    | React + TailwindCSS    | Modern, responsive user interface |
+| *Backend*     | Fastapi / Python       | Handles certificate generation, APIs, and blockchain interactions |
+| *Blockchain*  | Algorand               | High speed, low fees, and robust security |
+| *Email Service* | Gmail SMTP | Automates email delivery of certificates and verification links |
+| *QR Code*     | qrcode.react           | React component to generate dynamic QR codes |
+
+---
+
+## 🔹 Demo Flow (Hackathon Pitch)
+1. *Organizer:* Uploads participant emails and event details.  
+2. *Biswaschain:* Generates a certificate and mints an ASA for each participant.  
+3. *Attendee:* Receives an email with the certificate PDF, NFT details, and a QR code.  
+4. *Recruiter/Judge:* Scans the QR code using any smartphone.  
+5. *Verification:* The scan redirects to the Algorand blockchain explorer, displaying the immutable on-chain record of the certificate.
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
-- npm or yarn
+- [Node.js](https://nodejs.org/) (v16+ recommended)  
+- [Python 3.9+](https://www.python.org/) (if using Python backend)  
+- [Algorand Sandbox / TestNet](https://developer.algorand.org/docs/get-started/)  
+- A configured Algorand wallet and API key for TestNet transactions.
 
-### Installation
-
-1. Clone the repository:
+### Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd algorand-poap-system
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Open [http://localhost:5173](http://localhost:5173) in your browser
-
-## 📦 Build
-
-To build the project for production:
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist` directory.
-
-## 🌐 Deployment
-
-This project is configured for deployment on:
-- Bolt Hosting (current deployment)
-- Netlify
-- Vercel
-- Any static hosting service
-
-## 🔧 Environment Setup
-
-For full functionality, you'll need to set up:
-
-1. **Algorand Wallet Integration**
-2. **Supabase Database** (optional)
-3. **IPFS for Certificate Storage** (optional)
-
-## 🎯 Future Enhancements
-
-- [ ] Algorand wallet integration
-- [ ] Smart contract deployment
-- [ ] IPFS certificate storage
-- [ ] Email notifications
-- [ ] Batch NFT minting
-- [ ] Analytics dashboard
-- [ ] Mobile app version
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Algorand Foundation for blockchain infrastructure
-- Framer Motion for smooth animations
-- Tailwind CSS for styling system
-- React community for excellent tooling
-
----
-
-**Live Demo**: [https://algorand-poap-attend-9ph3.bolt.host](https://algorand-poap-attend-9ph3.bolt.host)
+git clone (https://github.com/ranadebsaha/algorand-frontend)
+cd Biswaschain

@@ -300,7 +300,7 @@ const SignInPage = () => {
               <h2 className="text-3xl font-bold text-white mb-2">
                 Welcome Back
               </h2>
-              <p className="text-gray-400">Sign in to Certificate App</p>
+              <p className="text-gray-400">Sign in to Bishwas Chain</p>
             </motion.div>
           </div>
 
@@ -571,7 +571,7 @@ const SignInPage = () => {
 const Header = () => (
   <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 p-4">
     <div className="container mx-auto flex justify-between items-center">
-      <h1 className="text-xl font-bold text-white">Certificate App</h1>
+      <h1 className="text-xl font-bold text-white">Bishwas Chain</h1>
       <SignedIn>
         <UserButton 
           appearance={{
